@@ -1,0 +1,11 @@
+# trying out the beta ubuntu 14.04 build
+sudo: required
+dist: trusty
+
+os:
+  - linux
+
+install: true
+
+script:
+  - bash packaging/ubuntu/ubuntu_package_setup.sh
