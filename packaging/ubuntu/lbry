@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+WEB_UI_BRANCH='master'
+
 urlencode() {
   local LANG=C
   local length="${#1}"
@@ -17,7 +19,7 @@ urlencode() {
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 if [ -z "$(pgrep lbrynet-daemon)" ]; then
   echo "running lbrynet-daemon..."
-  $DIR/lbrynet-daemon --branch=settings-page &
+  $DIR/lbrynet-daemon --branch="$WEB_UI_BRANCH" &
   sleep 3 # let the daemon load before connecting
 fi
 
@@ -26,7 +28,12 @@ ARG=${1:-}
 if [ -z "$ARG" ]; then
   URL=""
 else
-  URL="view?name=$(urlencode "$(echo "$ARG" | cut -c 8-)")"
+  NAME=$(echo "$ARG" | cut -c 8-)
+  if [ -z "$NAME" -o "$NAME" == "lbry" ]; then
+    URL=""
+  else
+    URL="/?watch=$(urlencode "$NAME")"
+  fi
 fi
 
-/usr/bin/xdg-open "http://localhost:5279/$URL"
+/usr/bin/xdg-open "http://localhost:5279$URL"
