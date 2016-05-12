@@ -8,26 +8,35 @@
 set -euo pipefail
 set -o xtrace
 
-SOURCE_DIR=$PWD
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 SUDO=''
 if (( $EUID != 0 )); then
-    SUDO='sudo'
+  SUDO='sudo'
 fi
 
-BRANCH=${1:-master}
-WEB_UI_BRANCH=${2:-}
 
-BUILD_DIR="$HOME/lbry-build-$(date +%Y%m%d-%H%M%S)"
+if [ ${CIRCLECI:-} ]; then
+  BUILD_DIR="$HOME/lbry-build-$(date +%Y%m%d-%H%M%S)"
+  BRANCH=$CIRCLE_BRANCH
+  WEB_UI_BRANCH=""
+else
+  BUILD_DIR="$DIR/lbry-build-$(date +%Y%m%d-%H%M%S)"
+  BRANCH=${1:-master}
+  WEB_UI_BRANCH=${2:-}
+fi
 mkdir "$BUILD_DIR"
 cd "$BUILD_DIR"
+
 
 # get the required OS packages
 $SUDO apt-get -qq update
 $SUDO DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends software-properties-common
 $SUDO add-apt-repository -y ppa:spotify-jyrki/dh-virtualenv
 $SUDO apt-get -qq update
-$SUDO DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends build-essential git python-dev libffi-dev libssl-dev libgmp3-dev dh-virtualenv debhelper wget
+$SUDO DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends build-essential git python-dev libffi-dev libssl-dev \
+  libgmp3-dev dh-virtualenv debhelper wget fakeroot
+
 
 # need a modern version of pip (more modern than ubuntu default)
 wget https://bootstrap.pypa.io/get-pip.py
@@ -35,15 +44,18 @@ $SUDO python get-pip.py
 rm get-pip.py
 $SUDO pip install make-deb
 
-# build packages
-#
-# dpkg-buildpackage outputs its results into '..' so
-# we need to move lbry into the build directory 
-mv $SOURCE_DIR lbry
+
+REPO_DIR="$BUILD_DIR/lbry"
+if [ ${CIRCLECI:-} ]; then
+  mv "$HOME/$CIRCLE_PROJECT_REPONAME" "$REPO_DIR"
+else
+  git clone https://github.com/lbryio/lbry.git --branch "$BRANCH" "$REPO_DIR"
+fi
+
 (
-    cd lbry
-    make-deb
-    dpkg-buildpackage -us -uc
+  cd "$REPO_DIR"
+  make-deb
+  dpkg-buildpackage -us -uc
 )
 
 
@@ -56,12 +68,15 @@ mkdir control data
 tar -xzf control.tar.gz --directory control
 tar -xJf data.tar.xz --directory data
 
-PACKAGING_DIR='lbry/packaging/ubuntu'
+
+PACKAGING_DIR="$REPO_DIR/packaging/ubuntu"
+
 
 # set web ui branch
 if [ -z "$WEB_UI_BRANCH" ]; then
   sed -i "s/^WEB_UI_BRANCH='[^']\+'/WEB_UI_BRANCH='$WEB_UI_BRANCH'/" "$PACKAGING_DIR/lbry"
 fi
+
 
 # add files
 function addfile() {
@@ -74,6 +89,7 @@ function addfile() {
 addfile "$PACKAGING_DIR/lbry" usr/share/python/lbrynet/bin/lbry
 addfile "$PACKAGING_DIR/lbry.desktop" usr/share/applications/lbry.desktop
 #addfile lbry/packaging/ubuntu/lbry-init.conf etc/init/lbry.conf
+
 
 # repackage .deb
 $SUDO chown -R root:root control data
