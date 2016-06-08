@@ -634,7 +634,7 @@ class LBRYcrdWallet(LBRYWallet):
     def _get_rpc_conf(self):
         settings = {"username": "rpcuser",
                     "password": "rpcpassword",
-                    "rpc_port": 8332}
+                    "rpc_port": 9245}
         if os.path.exists(self.wallet_conf):
             conf = open(self.wallet_conf)
             for l in conf:
