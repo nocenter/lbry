@@ -2,7 +2,7 @@ matrix:
     include:
         - os: linux
           sudo: required
-          dist: trust
+          dist: trusty
           # dh-virtualenv requires that we use the same python interpreter
           # that comes with the system, so we don't want to use anything that
           # travis would try to set-up for us in python
@@ -22,7 +22,7 @@ before_script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./packaging/osx/add-key.sh; fi
 
 script:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then bash packaging/ubuntu/ubuntu_package_setup.sh; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then bash packaging/ubuntu/ubuntu_package_setup.sh -t; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew upgrade gmp; fi
   # the default py2app (v0.9) has a bug that is fixed in the head of /metachris/py2app
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pip install git+https://github.com/metachris/py2app; fi
