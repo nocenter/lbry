@@ -192,12 +192,13 @@ class LBRYDaemon(jsonrpc.JSONRPC):
             'last_version': {'lbrynet': lbrynet_version, 'lbryum': lbryum_version}
         }
 
+        missing_settings = {}
+        removed_settings = {}
+
         if os.path.isfile(self.daemon_conf):
             f = open(self.daemon_conf, "r")
             loaded_settings = json.loads(f.read())
             f.close()
-            missing_settings = {}
-            removed_settings = {}
             for k in self.default_settings.keys():
                 if k not in loaded_settings.keys():
                     missing_settings[k] = self.default_settings[k]
