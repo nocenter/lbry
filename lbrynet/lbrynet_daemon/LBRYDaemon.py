@@ -24,7 +24,7 @@ from appdirs import user_data_dir
 from urllib2 import urlopen
 
 from lbrynet import __version__ as lbrynet_version
-from lbryum.version import ELECTRUM_VERSION as lbryum_version
+from lbryum.version import LBRYUM_VERSION as lbryum_version
 from lbrynet.core.PaymentRateManager import PaymentRateManager
 from lbrynet.core.server.BlobAvailabilityHandler import BlobAvailabilityHandlerFactory
 from lbrynet.core.server.BlobRequestHandler import BlobRequestHandlerFactory
@@ -517,7 +517,7 @@ class LBRYDaemon(jsonrpc.JSONRPC):
             try:
                 r = urlopen("https://raw.githubusercontent.com/lbryio/lbryum/master/lib/version.py").read().split('\n')
                 version = next(line.split("=")[1].split("#")[0].replace(" ", "")
-                               for line in r if "ELECTRUM_VERSION" in line)
+                               for line in r if "ELECTRUM_VERSION" in line or "LBRYUM_VERSION" in line)
                 version = version.replace("'", "")
                 log.info("remote lbryum " + str(version) + " > local lbryum " + str(lbryum_version) + " = " + str(
                     version > lbryum_version))
