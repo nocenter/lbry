@@ -7,7 +7,6 @@ import socket
 import time
 import os
 import base64
-
 from lbrynet.interfaces import IRequestCreator, IQueryHandlerFactory, IQueryHandler, ILBRYWallet
 from lbrynet.core.client.ClientRequest import ClientRequest
 from lbrynet.core.Error import UnknownNameError, InvalidStreamInfoError, RequestCanceledError
@@ -129,7 +128,7 @@ class AuthServiceProxy(object):
         if http_response is None:
             raise JSONRPCException({
                 'code': -342, 'message': 'missing HTTP response from server'})
-        return json.loads(r.decode('utf8'))
+        return json.loads(r.decode('utf8'), parse_float=Decimal)
 
 
 class ReservedPoints(object):
